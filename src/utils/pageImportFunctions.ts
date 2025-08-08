@@ -64,9 +64,14 @@ export interface FundingAllocation {
 const API_BASE_URL = 'https://api.canbizai.com/api/bpc';
 const API_TIMEOUT = 5000; // 5 seconds timeout
 
+// You need to define your actual token here
+const TOKEN = 'your-actual-api-token'; // Replace with your actual token
+
 // Generic API fetch function with error handling
 const fetchFromAPI = async (endpoint: string): Promise<any> => {
   try {
+    console.log(`Fetching from: ${API_BASE_URL}${endpoint}`);
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT);
     
@@ -74,20 +79,29 @@ const fetchFromAPI = async (endpoint: string): Promise<any> => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${TOKEN}`,
+        ...(TOKEN && TOKEN !== 'your-actual-api-token' ? { 'Authorization': `Bearer ${TOKEN}` } : {}),
       },
       signal: controller.signal,
     });
     
     clearTimeout(timeoutId);
     
+    console.log(`Response status for ${endpoint}:`, response.status);
+    
     if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      console.warn(`API Error for ${endpoint}: ${response.status} ${response.statusText}`);
+      return null;
     }
     
-    return await response.json();
+    const data = await response.json();
+    console.log(`Data received for ${endpoint}:`, data);
+    return data;
   } catch (error) {
-    console.warn(`API fetch failed for ${endpoint}:`, error);
+    if (error.name === 'AbortError') {
+      console.warn(`API request timeout for ${endpoint}`);
+    } else {
+      console.warn(`API fetch failed for ${endpoint}:`, error.message);
+    }
     return null;
   }
 };
@@ -383,6 +397,32 @@ export const testAPIConnectivity = async (): Promise<boolean> => {
   } catch (error) {
     console.warn('API connectivity test failed:', error);
     return false;
+  }
+};
+
+// Test function to check all API endpoints
+export const testAllAPIEndpoints = async () => {
+  const endpoints = [
+    '/cover-page',
+    '/table-of-contents', 
+    '/company-description',
+    '/market-analysis',
+    '/organization-management',
+    '/product-service',
+    '/marketing-sales',
+    '/financial-projections',
+    '/funding-request',
+    '/appendix',
+    '/government-policy',
+    '/ngo-landscape',
+    '/grants'
+  ];
+
+  console.log('Testing all API endpoints...');
+  
+  for (const endpoint of endpoints) {
+    const result = await fetchFromAPI(endpoint);
+    console.log(`${endpoint}: ${result ? 'SUCCESS' : 'FAILED'}`);
   }
 };
 
