@@ -545,24 +545,6 @@ const generatePageCanvasForMultiPage = async (element: HTMLElement): Promise<HTM
           textNode.textContent = normalizedText;
         }
       });
-      
-      // Also normalize specific title elements that are causing issues
-      const titleElements = element.querySelectorAll('h1, h2, h3, h4, h5, h6, .title, .section-title');
-      titleElements.forEach(titleEl => {
-        if (titleEl.textContent) {
-          // Replace spaces with non-breaking spaces in titles to prevent word wrapping issues
-          const normalizedTitle = titleEl.textContent
-            .trim()
-            // Replace regular spaces with non-breaking spaces in titles
-            .replace(/ /g, '\u00A0')
-            // Handle special cases
-            .replace(/NGO/g, 'N.G.O.')
-            .replace(/Market\u00A0Analysis/g, 'Market-Analysis')
-            .replace(/Appendix\u00A0-\u00A0NGO/g, 'Appendix\u00A0-\u00A0N.G.O.');
-          
-          titleEl.textContent = normalizedTitle;
-        }
-      });
     };
     
     // Apply text normalization
@@ -613,10 +595,19 @@ const generatePageCanvasForMultiPage = async (element: HTMLElement): Promise<HTM
       
       // Add specific text rendering fixes
       if (cloneEl.tagName && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(cloneEl.tagName)) {
+        // Prevent text wrapping and ensure consistent rendering
         cloneEl.style.whiteSpace = 'nowrap';
         cloneEl.style.wordBreak = 'keep-all';
+        cloneEl.style.overflow = 'visible';
+        cloneEl.style.textOverflow = 'clip';
         cloneEl.style.textRendering = 'optimizeLegibility';
         cloneEl.style.fontKerning = 'normal';
+        cloneEl.style.fontFeatureSettings = '"kern" 1';
+        cloneEl.style.letterSpacing = 'normal';
+        cloneEl.style.wordSpacing = 'normal';
+        // Ensure consistent font metrics
+        cloneEl.style.fontVariantLigatures = 'none';
+        cloneEl.style.fontVariantNumeric = 'normal';
       }
       
       // Recursively apply to children
@@ -689,14 +680,24 @@ const generatePageCanvasForMultiPage = async (element: HTMLElement): Promise<HTM
         h1, h2, h3, h4, h5, h6, .title, .section-title {
           white-space: nowrap !important;
           word-break: keep-all !important;
+         overflow: visible !important;
+         text-overflow: clip !important;
           text-rendering: optimizeLegibility !important;
           font-kerning: normal !important;
           font-feature-settings: "kern" 1 !important;
+         letter-spacing: normal !important;
+         word-spacing: normal !important;
+         font-variant-ligatures: none !important;
+         font-variant-numeric: normal !important;
+         text-align: center !important;
+         line-height: 1.2 !important;
         }
         .react-grid-item h1, .react-grid-item h2, .react-grid-item h3 {
           white-space: nowrap !important;
           overflow: visible !important;
           text-overflow: clip !important;
+         width: auto !important;
+         min-width: max-content !important;
         }
       `;
       
@@ -741,7 +742,7 @@ const generatePageCanvasForMultiPage = async (element: HTMLElement): Promise<HTM
         foreignObjectRendering: true,
         imageTimeout: 15000,
         removeContainer: false,
-        letterRendering: false, // Changed to false to prevent text rendering issues
+        letterRendering: true, // Re-enabled with better CSS controls
         width: contentWidth,
         height: contentHeight,
         scrollX: 0,
@@ -770,9 +771,19 @@ const generatePageCanvasForMultiPage = async (element: HTMLElement): Promise<HTM
             if (el.tagName && ['H1', 'H2', 'H3', 'H4', 'H5', 'H6'].includes(el.tagName)) {
               el.style.whiteSpace = 'nowrap';
               el.style.wordBreak = 'keep-all';
+             el.style.overflow = 'visible';
+             el.style.textOverflow = 'clip';
               el.style.textRendering = 'optimizeLegibility';
               el.style.fontKerning = 'normal';
               el.style.fontFeatureSettings = '"kern" 1';
+             el.style.letterSpacing = 'normal';
+             el.style.wordSpacing = 'normal';
+             el.style.fontVariantLigatures = 'none';
+             el.style.fontVariantNumeric = 'normal';
+             el.style.textAlign = 'center';
+             el.style.lineHeight = '1.2';
+             el.style.width = 'auto';
+             el.style.minWidth = 'max-content';
             }
           });
           
@@ -783,21 +794,6 @@ const generatePageCanvasForMultiPage = async (element: HTMLElement): Promise<HTM
               const spanEl = span as HTMLElement;
               spanEl.style.zoom = '1';
               spanEl.style.transform = 'scale(1)';
-            }
-          });
-          
-          // Apply text normalization to cloned document as well
-          const titleElementsInClone = clonedDoc.querySelectorAll('h1, h2, h3, h4, h5, h6, .title, .section-title');
-          titleElementsInClone.forEach(titleEl => {
-            if (titleEl.textContent) {
-              const normalizedTitle = titleEl.textContent
-                .trim()
-                .replace(/ /g, '\u00A0')
-                .replace(/NGO/g, 'N.G.O.')
-                .replace(/Market\u00A0Analysis/g, 'Market-Analysis')
-                .replace(/Appendix\u00A0-\u00A0NGO/g, 'Appendix\u00A0-\u00A0N.G.O.');
-              
-              titleEl.textContent = normalizedTitle;
             }
           });
           
